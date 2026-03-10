@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: civic-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - civic-net
+
+  ai-engine:
+    build: ./ai-engine
+    container_name: civic-ai
+    ports:
+      - "8000:8000"
+    env_file: ./ai-engine/.env
+    networks:
+      - civic-net
+
+  server:
+    build: ./server
+    container_name: civic-server
+    ports:
+      - "5000:5000"
+    env_file: ./server/.env
+    depends_on:
+      - mongo
+      - ai-engine
+    volumes:
+      - ./server/uploads:/app/uploads
+    networks:
+      - civic-net
+
+  client:
+    build: ./client
+    container_name: civic-client
+    ports:
+      - "3000:80"
+    depends_on:
+      - server
+    networks:
+      - civic-net
+
+volumes:
+  mongo-data:
+
+networks:
+  civic-net:
+    driver: bridge
